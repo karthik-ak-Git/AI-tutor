@@ -63,8 +63,6 @@ app.add_middleware(
 
 # Serve frontend static files
 try:
-    from pathlib import Path
-
     frontend_path = Path(__file__).parent.parent / "frontend"
     if frontend_path.exists():
         # Mount static files (CSS, JS) at /static
@@ -466,7 +464,6 @@ async def global_exception_handler(request, exc):
 
 if __name__ == "__main__":
     import uvicorn
-    import os
 
     # Use PORT from environment (for Render, Heroku, etc.) or default
     port = int(os.getenv("PORT", settings.PORT))

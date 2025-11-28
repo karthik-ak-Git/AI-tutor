@@ -3,7 +3,6 @@ Configuration management for AI Tutor application
 """
 
 import os
-from pathlib import Path
 from typing import Optional
 from pydantic_settings import BaseSettings
 
@@ -36,6 +35,7 @@ class Settings(BaseSettings):
     RETRIEVER_K: int = 4
     MAX_UPLOAD_SIZE: int = 50 * 1024 * 1024  # 50MB
     UPLOAD_DIR: str = "uploads"
+    CHROMA_DB_PATH: str = "chroma_db"
 
     # Search Configuration
     SEARCH_MAX_RESULTS: int = 10
@@ -44,15 +44,13 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     DEBUG: bool = False
+    LOG_LEVEL: str = "INFO"
 
     # Render/Production Configuration
     @property
     def port(self) -> int:
         """Get port from environment or default."""
         return int(os.getenv("PORT", self.PORT))
-
-    # Logging
-    LOG_LEVEL: str = "INFO"
 
     class Config:
         env_file = ".env"
