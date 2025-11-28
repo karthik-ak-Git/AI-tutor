@@ -1,103 +1,110 @@
 # Deployment Guide - AI Tutor API
 
-Quick deployment guide for various platforms.
+Complete deployment guide for the AI Tutor FastAPI application.
 
-## 🚀 Render Deployment (Recommended)
+## 🚀 Quick Deploy to Render
 
-See [RENDER_DEPLOY.md](./RENDER_DEPLOY.md) for detailed instructions.
+### Method 1: Using Blueprint (Recommended)
 
-### Quick Start:
-1. Push code to GitHub
-2. Go to [Render Dashboard](https://dashboard.render.com)
-3. Click "New +" → "Blueprint"
-4. Connect repository
-5. Set `OPENROUTER_API_KEY` environment variable
-6. Deploy!
+1. **Push to GitHub**:
+   ```bash
+   git add .
+   git commit -m "Ready for deployment"
+   git push origin main
+   ```
+
+2. **Deploy on Render**:
+   - Go to [Render Dashboard](https://dashboard.render.com)
+   - Click **"New +"** → **"Blueprint"**
+   - Connect your GitHub repository
+   - Render will detect `render.yaml` automatically
+   - Click **"Apply"**
+
+3. **Set Environment Variable**:
+   - Go to your service → **"Environment"** tab
+   - Add: `OPENROUTER_API_KEY` = Your API key (mark as secret)
+   - Click **"Save Changes"**
+
+4. **Wait for Deployment**:
+   - First build takes 5-10 minutes
+   - Service will be live at: `https://your-app-name.onrender.com`
+
+### Method 2: Manual Setup
+
+1. **Create Web Service**:
+   - Click **"New +"** → **"Web Service"**
+   - Connect GitHub repository
+
+2. **Configure**:
+   - **Name**: `ai-tutor-api`
+   - **Environment**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+
+3. **Set Environment Variables**:
+   ```
+   OPENROUTER_API_KEY=sk-or-your-key-here
+   ```
 
 ## 📋 Pre-Deployment Checklist
 
-- [ ] All code committed and pushed to GitHub
-- [ ] Environment variables documented
-- [ ] `.env` file NOT committed (in `.gitignore`)
-- [ ] API keys secured
-- [ ] Dependencies in `requirements.txt`
-- [ ] Health check endpoint working (`/health`)
-- [ ] CORS configured for production
+- [ ] Code pushed to GitHub
+- [ ] `render.yaml` exists
+- [ ] `requirements.txt` is complete
+- [ ] `.env` file NOT committed
+- [ ] OpenRouter API key ready
+- [ ] Health check works (`/health`)
 
 ## 🔧 Environment Variables
 
-Required:
+**Required**:
 - `OPENROUTER_API_KEY` - Your OpenRouter API key
 
-Optional (with defaults):
-- `OPENROUTER_MODEL` - Model name (default: `openai/gpt-4.1-nano`)
-- `PORT` - Server port (auto-set by platform)
-- `LOG_LEVEL` - Logging level (default: `INFO`)
+**Optional** (with defaults):
+- `OPENROUTER_MODEL=openai/gpt-4.1-nano`
+- `OPENROUTER_BASE_URL=https://openrouter.ai/api/v1`
+- `OPENROUTER_TEMPERATURE=0.5`
+- `EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2`
+- `LOG_LEVEL=INFO`
 
-## 📝 Platform-Specific Notes
+## ⚠️ Free Tier Limitations
 
-### Render
-- Free tier: Spins down after 15 min inactivity
-- Use `render.yaml` for Infrastructure as Code
-- Persistent storage requires paid plan
+- **Spins down** after 15 minutes of inactivity
+- **First request** after spin-down takes ~30 seconds
+- **Ephemeral storage** (files lost on restart)
 
-### Heroku
-- Use `Procfile` for process definition
-- Add `runtime.txt` for Python version
-- Use Heroku Postgres for database (if needed)
+**Solutions**:
+- Upgrade to paid plan ($7/month) for persistent storage
+- Use external storage (S3, Pinecone) for production
 
-### Railway
-- Similar to Render
-- Automatic deployments from GitHub
-- Persistent volumes available
+## 🐳 Docker Deployment
 
-### Fly.io
-- Docker-based deployment
-- Global edge deployment
-- Persistent volumes available
+### Build Image
+```bash
+docker build -t ai-tutor:latest .
+```
 
-## 🔒 Security Checklist
+### Run Container
+```bash
+docker run -p 8000:8000 \
+  -e OPENROUTER_API_KEY=your-key \
+  ai-tutor:latest
+```
 
-- [ ] API keys in environment variables (not code)
-- [ ] CORS configured for specific domains
-- [ ] Rate limiting implemented (recommended)
-- [ ] Input validation on all endpoints
-- [ ] Error messages don't leak sensitive info
-- [ ] HTTPS enabled (automatic on most platforms)
+## ✅ Post-Deployment
 
-## 📊 Monitoring
+1. **Test Health**: `https://your-app.onrender.com/health`
+2. **API Docs**: `https://your-app.onrender.com/docs`
+3. **Frontend**: `https://your-app.onrender.com`
 
-After deployment:
-1. Test health endpoint: `GET /health`
-2. Check API docs: `GET /docs`
-3. Monitor logs for errors
-4. Test main endpoints
-5. Set up uptime monitoring (optional)
+## 🔍 Troubleshooting
 
-## 🐛 Troubleshooting
+- **Build fails**: Check `requirements.txt` and logs
+- **Service crashes**: Verify `OPENROUTER_API_KEY` is set
+- **Slow response**: Normal on free tier (spins down)
 
-### Service won't start
-- Check logs for errors
-- Verify environment variables
-- Check port configuration
-- Ensure dependencies installed
+## 📚 More Information
 
-### Build fails
-- Check Python version compatibility
-- Verify `requirements.txt` is correct
-- Check build logs for specific errors
-- Ensure all dependencies are listed
-
-### Memory issues
-- Upgrade to higher tier
-- Reduce chunk sizes
-- Use lighter models
-- Optimize code
-
-## 📚 Additional Resources
-
-- [Render Documentation](https://render.com/docs)
-- [FastAPI Deployment](https://fastapi.tiangolo.com/deployment/)
-- [Uvicorn Documentation](https://www.uvicorn.org/)
-
-
+- Render Docs: https://render.com/docs
+- API Documentation: `/docs` endpoint
+- Health Check: `/health` endpoint

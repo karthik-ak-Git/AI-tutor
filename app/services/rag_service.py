@@ -2,17 +2,19 @@
 RAG (Retrieval Augmented Generation) service for document processing
 """
 
+import logging
+import uuid
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
+
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
 from langchain_core.tools import Tool
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 from app.config import settings
 from app.services.embeddings_service import embeddings_service
-import logging
-import uuid
 
 logger = logging.getLogger(__name__)
 

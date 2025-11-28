@@ -61,11 +61,12 @@ chroma_db/
 .DS_Store
 Thumbs.db
 
-# Testing
+# Testing (if added later)
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
+bandit-report.json
 
 # Docker
 .dockerignore

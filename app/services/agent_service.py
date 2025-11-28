@@ -2,13 +2,15 @@
 Agent service that orchestrates LLM, RAG, and Search
 """
 
+import logging
+
 from langchain_core.runnables import RunnableLambda
+
+from app.config import settings
 from app.services.llm_service import llm_service
+from app.services.memory import SimpleMemory
 from app.services.rag_service import rag_service
 from app.services.search_service import search_service
-from app.services.memory import SimpleMemory
-from app.config import settings
-import logging
 
 logger = logging.getLogger(__name__)
 

@@ -2,9 +2,10 @@
 Memory management for conversation context
 """
 
-from typing import Dict, List, Optional
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 import logging
+from typing import Dict, List, Optional
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
 logger = logging.getLogger(__name__)
 

@@ -2,9 +2,11 @@
 LLM service for OpenAI/OpenRouter integration
 """
 
-from langchain_openai import ChatOpenAI
-from app.config import settings
 import logging
+
+from langchain_openai import ChatOpenAI
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -19,17 +21,11 @@ class LLMService:
             api_key = settings.OPENROUTER_API_KEY
 
             if not api_key or api_key.strip() == "":
-                raise ValueError(
-                    "OPENROUTER_API_KEY is not set. "
-                    "Please set it in your .env file or environment variables."
-                )
+                raise ValueError("OPENROUTER_API_KEY is not set. " "Please set it in your .env file or environment variables.")
 
             # Validate API key format (should start with sk-)
             if not api_key.startswith("sk-"):
-                logger.warning(
-                    "API key format may be incorrect. "
-                    "OpenRouter API keys typically start with 'sk-'"
-                )
+                logger.warning("API key format may be incorrect. " "OpenRouter API keys typically start with 'sk-'")
 
             self.llm = ChatOpenAI(
                 model=settings.OPENROUTER_MODEL,

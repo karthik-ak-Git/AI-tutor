@@ -2,10 +2,12 @@
 Web search service using DuckDuckGo
 """
 
+import logging
+
 from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+
 from app.config import settings
-import logging
 
 logger = logging.getLogger(__name__)
 

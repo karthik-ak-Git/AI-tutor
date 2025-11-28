@@ -2,35 +2,36 @@
 FastAPI application entry point
 """
 
-import uuid
 import logging
 import os
 import shutil
+import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
-from fastapi import FastAPI, HTTPException, status, UploadFile, File, Form
+
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from contextlib import asynccontextmanager
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.models.schemas import (
     ChatRequest,
     ChatResponse,
-    HealthResponse,
-    ErrorResponse,
+    DocumentQueryRequest,
+    DocumentQueryResponse,
     DocumentSummaryRequest,
     DocumentSummaryResponse,
     DocumentUploadResponse,
-    DocumentQueryRequest,
-    DocumentQueryResponse,
+    ErrorResponse,
+    HealthResponse,
     LearnRequest,
     LearnResponse,
 )
 from app.services.agent_service import agent_service
-from app.services.rag_service import rag_service
 from app.services.llm_service import llm_service
+from app.services.rag_service import rag_service
 
 # Configure logging
 logging.basicConfig(level=getattr(logging, settings.LOG_LEVEL), format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
