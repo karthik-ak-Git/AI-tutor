@@ -7,58 +7,176 @@ on:
     branches: [main, develop]
 
 jobs:
+  # ============================================
+  # JOB 1: Code Quality & Testing
+  # ============================================
   lint-and-test:
+    name: Code Quality & Testing
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: 🐍 Set up Python 3.11
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install dependencies
+      - name: 📦 Install production dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
+
+      - name: 📦 Install development dependencies
+        run: |
           pip install -r requirements-dev.txt
 
-      - name: Lint with flake8
+      # ============================================
+      # CHECK 1: Syntax & Critical Errors (flake8)
+      # ============================================
+      - name: 🔍 Lint - Critical Errors (flake8)
         run: |
-          flake8 app/ --select=E9,F63,F7,F82 --show-source --statistics --config=.flake8
+          echo "Checking for syntax errors and undefined names..."
+          flake8 app/ \
+            --select=E9,F63,F7,F82 \
+            --show-source \
+            --statistics \
+            --config=.flake8
+        # FAILS CI on critical errors
 
-      - name: Check formatting with black
+      # ============================================
+      # CHECK 2: Code Style (flake8)
+      # ============================================
+      - name: 🎨 Lint - Code Style (flake8)
+        continue-on-error: true
         run: |
+          echo "Checking code style (non-blocking)..."
+          flake8 app/ \
+            --count \
+            --exit-zero \
+            --max-complexity=10 \
+            --max-line-length=127 \
+            --statistics \
+            --config=.flake8 || echo "⚠️ Style issues found (non-blocking)"
+        # WARNING only, doesn't fail CI
+
+      # ============================================
+      # CHECK 3: Code Formatting (black)
+      # ============================================
+      - name: 🎨 Format Check (black)
+        run: |
+          echo "Checking code formatting..."
           black --check app/ --config pyproject.toml
+        # FAILS CI if formatting issues found
 
-      - name: Type check with mypy
+      # ============================================
+      # CHECK 4: Type Checking (mypy)
+      # ============================================
+      - name: 🔎 Type Check (mypy)
         continue-on-error: true
         run: |
-          mypy app/ --config-file mypy.ini
+          echo "Running type checking..."
+          mypy app/ --config-file mypy.ini || echo "⚠️ Type issues found (non-blocking)"
+        # WARNING only, doesn't fail CI
 
-      - name: Run tests
+      # ============================================
+      # CHECK 5: Import Sorting (isort)
+      # ============================================
+      - name: 📋 Import Sort Check (isort)
         continue-on-error: true
         run: |
-          pytest tests/ -v --cov=app --cov-report=xml
+          echo "Checking import order..."
+          isort --check-only app/ --profile black || echo "⚠️ Import order issues (non-blocking)"
+        # WARNING only, doesn't fail CI
+
+      # ============================================
+      # CHECK 6: Security Scan (bandit)
+      # ============================================
+      - name: 🔒 Security Scan (bandit)
+        continue-on-error: true
+        run: |
+          echo "Scanning for security issues..."
+          bandit -r app/ -f json -o bandit-report.json || true
+          bandit -r app/ -ll || echo "⚠️ Security issues found (non-blocking)"
+        # WARNING only, doesn't fail CI
+
+      # ============================================
+      # CHECK 7: Unit Tests (pytest)
+      # ============================================
+      - name: 🧪 Run Unit Tests (pytest)
+        continue-on-error: true
+        run: |
+          echo "Running unit tests..."
+          pytest tests/ -v --tb=short
         env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || 'test-key' }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || 'test-key-for-ci' }}
+        # WARNING only, doesn't fail CI
 
+      # ============================================
+      # CHECK 8: Test Coverage (pytest-cov)
+      # ============================================
+      - name: 📊 Test Coverage (pytest-cov)
+        continue-on-error: true
+        run: |
+          echo "Generating test coverage report..."
+          pytest tests/ \
+            -v \
+            --cov=app \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --cov-report=html \
+            --cov-fail-under=0 || echo "⚠️ Coverage below threshold (non-blocking)"
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || 'test-key-for-ci' }}
+        # WARNING only, doesn't fail CI
+
+      # ============================================
+      # CHECK 9: Upload Coverage Report
+      # ============================================
+      - name: 📤 Upload Coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      # ============================================
+      # CHECK 10: Upload Security Report
+      # ============================================
+      - name: 📤 Upload Security Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-security-report
+          path: bandit-report.json
+          if-no-files-found: ignore
+
+  # ============================================
+  # JOB 2: Docker Build & Test
+  # ============================================
   docker-build:
+    name: Docker Build & Test
     runs-on: ubuntu-latest
     needs: lint-and-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
+      # ============================================
+      # CHECK 11: Docker Build
+      # ============================================
+      - name: 🏗️ Build Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -66,12 +184,56 @@ jobs:
           tags: ai-tutor:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          platforms: linux/amd64
+        # FAILS CI if build fails
 
-      - name: Test Docker image
+      # ============================================
+      # CHECK 12: Docker Container Health
+      # ============================================
+      - name: 🏥 Test Docker Container
         run: |
-          docker run --rm -d -p 8000:8000 --name ai-tutor-test \
-            -e OPENROUTER_API_KEY=test-key \
+          echo "Testing Docker container..."
+          docker run --rm -d \
+            -p 8000:8000 \
+            --name ai-tutor-test \
+            -e OPENROUTER_API_KEY=test-key-for-ci \
             ai-tutor:latest
-          sleep 10
+          
+          echo "Waiting for container to start..."
+          sleep 15
+          
+          echo "Testing health endpoint..."
           curl -f http://localhost:8000/health || exit 1
+          
+          echo "Container is healthy!"
           docker stop ai-tutor-test
+        # FAILS CI if container doesn't start or health check fails
+
+  # ============================================
+  # JOB 3: Dependency Check
+  # ============================================
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      # ============================================
+      # CHECK 13: Dependency Vulnerability Scan
+      # ============================================
+      - name: 🔒 Check Dependencies (safety)
+        continue-on-error: true
+        run: |
+          echo "Checking for vulnerable dependencies..."
+          pip install safety
+          safety check --json || echo "⚠️ Vulnerable dependencies found (non-blocking)"
+        # WARNING only, doesn't fail CI
