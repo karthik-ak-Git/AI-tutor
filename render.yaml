@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: ai-tutor-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: openai/gpt-4.1-nano
+      - key: OPENROUTER_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: OPENROUTER_TEMPERATURE
+        value: 0.5
+      - key: OPENROUTER_TIMEOUT
+        value: 30
+      - key: EMBEDDING_MODEL
+        value: sentence-transformers/all-MiniLM-L6-v2
+      - key: EMBEDDING_DEVICE
+        value: cpu
+      - key: CHUNK_SIZE
+        value: 1000
+      - key: CHUNK_OVERLAP
+        value: 200
+      - key: RETRIEVER_K
+        value: 4
+      - key: SEARCH_MAX_RESULTS
+        value: 10
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        fromService:
+          type: web
+          name: ai-tutor-api
+          property: port
+      - key: DEBUG
+        value: false
+      - key: LOG_LEVEL
+        value: INFO
+    healthCheckPath: /health
+
+
