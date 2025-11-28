@@ -17,7 +17,9 @@ class Settings(BaseSettings):
     API_DESCRIPTION: str = "AI Tutor & Research Agent API with RAG and Web Search"
 
     # OpenRouter Configuration
-    OPENROUTER_API_KEY: str
+    # API key must be provided via environment variable or .env file
+    # Never hardcode API keys in the source code
+    OPENROUTER_API_KEY: str  # Required - must be set in environment (.env file)
     OPENROUTER_MODEL: str = "openai/gpt-4.1-nano"
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     OPENROUTER_TEMPERATURE: float = 0.5
