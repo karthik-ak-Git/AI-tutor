@@ -30,20 +30,28 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest pytest-cov black flake8 mypy
+        pip install -r requirements-dev.txt || pip install pytest pytest-cov black flake8 mypy types-python-dotenv
     
     - name: Lint with flake8
       run: |
-        flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        echo "🔍 Running flake8 linting..."
+        # Check for critical errors (syntax, undefined names) - will fail CI
+        flake8 app/ --select=E9,F63,F7,F82 --show-source --statistics --config=.flake8 || exit 1
+        echo "✅ Critical linting checks passed"
+        # Check for style issues (warnings) - won't fail CI
+        flake8 app/ --count --exit-zero --statistics --config=.flake8 || echo "⚠️ Style issues found (non-blocking)"
     
     - name: Check formatting with black
       run: |
-        black --check app/
+        echo "🎨 Checking code formatting with black..."
+        black --check app/ --config pyproject.toml || (echo "❌ Code formatting issues found. Run 'black app/' to fix." && exit 1)
+        echo "✅ Code formatting is correct"
     
     - name: Type check with mypy
       run: |
-        mypy app/ --ignore-missing-imports || true
+        echo "🔎 Running type checking with mypy..."
+        mypy app/ --config-file mypy.ini || (echo "⚠️ Type checking found issues (non-blocking)" && exit 0)
+        echo "✅ Type checking completed"
     
     - name: Test with pytest
       run: |

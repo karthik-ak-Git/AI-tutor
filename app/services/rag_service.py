@@ -177,27 +177,30 @@ class RAGService:
                 "error": str(e)
             }
     
-    def _retrieve_documents(self, query: str):
+    def _retrieve_documents(self, query: str) -> List[Document]:
         """Retrieve documents using compatible method."""
         try:
             # Try invoke() first (newer LangChain versions)
             if hasattr(self.retriever, 'invoke'):
                 result = self.retriever.invoke(query)
                 # invoke() returns a list directly
-                return result if isinstance(result, list) else [result]
+                if isinstance(result, list):
+                    return result
+                return [result] if result else []
             # Fallback to get_relevant_documents() (older versions)
             elif hasattr(self.retriever, 'get_relevant_documents'):
                 return self.retriever.get_relevant_documents(query)
             else:
                 # Last resort: try calling directly
-                return list(self.retriever(query))
+                result = self.retriever(query)
+                return list(result) if result else []
         except Exception as e:
             logger.error(f"Retrieval method error: {e}")
             # Try alternative methods
             try:
                 if hasattr(self.retriever, 'get_relevant_documents'):
                     return self.retriever.get_relevant_documents(query)
-            except:
+            except Exception:
                 pass
             raise
     
@@ -245,7 +248,7 @@ class RAGService:
             **self.document_metadata
         }
     
-    def get_document_summary(self, llm, query: Optional[str] = None) -> str:
+    def get_document_summary(self, llm: any, query: Optional[str] = None) -> str:  # type: ignore
         """Get a summary of the uploaded document using RAG."""
         if not self.is_available():
             return "No document loaded."
@@ -273,7 +276,7 @@ class RAGService:
             logger.error(f"Failed to generate document summary: {e}")
             return f"Error generating summary: {str(e)}"
     
-    def query_with_context(self, query: str, llm, teaching_mode: bool = True) -> str:
+    def query_with_context(self, query: str, llm: any, teaching_mode: bool = True) -> str:  # type: ignore
         """Query documents with context and provide teaching response."""
         if not self.is_available():
             return "No documents available. Please upload a document first."

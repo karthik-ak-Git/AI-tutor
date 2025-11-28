@@ -46,7 +46,6 @@ class Settings(BaseSettings):
     @property
     def port(self) -> int:
         """Get port from environment or default."""
-        import os
         return int(os.getenv("PORT", self.PORT))
     
     # Logging
