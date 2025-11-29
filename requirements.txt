@@ -5,16 +5,17 @@ pydantic>=2.5.0
 pydantic-settings>=2.1.0
 python-multipart>=0.0.6
 
-# LangChain dependencies
-langchain>=0.1.0
+# LangChain dependencies (minimal set)
+langchain-core>=0.1.0
 langchain-openai>=0.0.5
 langchain-community>=0.0.20
 langchain-text-splitters>=0.0.1
+langchain-huggingface>=0.0.1
 
 # Vector store and embeddings
-chromadb>=0.4.0
+# Note: torch CPU-only is installed via build command before this
 sentence-transformers>=2.2.2
-langchain-huggingface>=0.0.1
+chromadb>=0.4.0
 
 # Document processing
 pypdf>=3.17.0
