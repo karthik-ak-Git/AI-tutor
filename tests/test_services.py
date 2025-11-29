@@ -54,3 +54,4 @@ def test_memory_get_last_n():
     assert messages[0].content == "Message 2"
     assert messages[2].content == "Message 4"
 
+

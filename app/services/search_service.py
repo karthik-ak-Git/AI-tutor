@@ -41,3 +41,4 @@ class SearchService:
 
 # Global search service instance
 search_service = SearchService()
+

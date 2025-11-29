@@ -49,3 +49,4 @@ class SimpleMemory:
         """Clear all sessions."""
         self.sessions.clear()
         logger.info("Cleared all sessions")
+
