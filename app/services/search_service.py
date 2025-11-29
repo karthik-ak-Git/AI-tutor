@@ -17,16 +17,19 @@ class SearchService:
 
     def __init__(self):
         """Initialize search service."""
+        self.search_tool = None
         try:
             wrapper = DuckDuckGoSearchAPIWrapper(max_results=settings.SEARCH_MAX_RESULTS)
             self.search_tool = DuckDuckGoSearchResults(api_wrapper=wrapper)
             logger.info("Web search tool initialized (DuckDuckGo)")
         except Exception as e:
-            logger.error(f"Failed to initialize search service: {e}")
-            raise
+            logger.warning(f"Failed to initialize search service: {e}. Web search will not be available.")
+            # Don't raise - allow app to start without search functionality
 
     def search(self, query: str) -> str:
         """Perform web search."""
+        if self.search_tool is None:
+            return "Web search is not available. Please check the search service configuration."
         try:
             result = self.search_tool.invoke(query)
             return result

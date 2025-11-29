@@ -30,8 +30,10 @@ class AgentService:
         self.retriever_tool = rag_service.get_retriever_tool()
         self.search_tool = search_service.get_tool()
 
-        # Prepare tools list
-        self.tools = [self.search_tool]
+        # Prepare tools list (only add non-None tools)
+        self.tools = []
+        if self.search_tool is not None:
+            self.tools.append(self.search_tool)
         if self.retriever_tool is not None:
             self.tools.append(self.retriever_tool)
 
@@ -68,9 +70,13 @@ class AgentService:
             if use_document and self.retriever_tool:
                 tool_result = self.retriever_tool.invoke(query)
                 context = f"Document Information:\n{tool_result}\n\n"
-            else:
+            elif self.search_tool is not None:
                 tool_result = self.search_tool.invoke(query)
                 context = f"Web Search Results:\n{tool_result}\n\n"
+            else:
+                # No tools available
+                context = "No search tools are currently available. Please upload a document or configure web search.\n\n"
+                source = "general"
         except Exception as e:
             logger.error(f"Tool invocation failed: {e}")
             context = f"Error retrieving information: {str(e)}\n\n"
