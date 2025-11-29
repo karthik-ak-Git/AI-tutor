@@ -1,6 +1,19 @@
 // Configuration
+// Auto-detect API endpoint: use current origin in production, localhost in development
+const getDefaultApiEndpoint = () => {
+    const saved = localStorage.getItem('apiEndpoint');
+    if (saved) return saved;
+    
+    // If running on localhost, use localhost:8000, otherwise use current origin
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:8000';
+    }
+    // In production (Render), use relative URLs (same origin)
+    return '';
+};
+
 const CONFIG = {
-    apiEndpoint: localStorage.getItem('apiEndpoint') || 'http://localhost:8000',
+    apiEndpoint: getDefaultApiEndpoint(),
     sessionId: localStorage.getItem('sessionId') || generateSessionId(),
     autoScroll: true
 };
@@ -157,7 +170,9 @@ async function handleSubmit(e) {
         const useDocument = useDocumentCheckbox.checked;
         const endpoint = useDocument ? '/learn/ask' : '/chat';
         
-        const response = await fetch(`${CONFIG.apiEndpoint}${endpoint}`, {
+        // Use relative URL if apiEndpoint is empty, otherwise use full URL
+        const baseUrl = CONFIG.apiEndpoint || window.location.origin;
+        const response = await fetch(`${baseUrl}${endpoint}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -262,7 +277,8 @@ function clearChat() {
     `;
     
     // Clear session on backend
-    fetch(`${CONFIG.apiEndpoint}/chat/${CONFIG.sessionId}`, {
+    const baseUrl = CONFIG.apiEndpoint || window.location.origin;
+    fetch(`${baseUrl}/chat/${CONFIG.sessionId}`, {
         method: 'DELETE'
     }).catch(err => console.error('Error clearing session:', err));
 }
@@ -297,7 +313,9 @@ async function handleUpload(e) {
         const formData = new FormData();
         formData.append('file', file);
         
-        const response = await fetch(`${CONFIG.apiEndpoint}/document/summary`, {
+        // Use relative URL if apiEndpoint is empty, otherwise use full URL
+        const baseUrl = CONFIG.apiEndpoint || window.location.origin;
+        const response = await fetch(`${baseUrl}/document/summary`, {
             method: 'POST',
             body: formData
         });
@@ -343,26 +361,27 @@ async function handleUpload(e) {
 // Save settings
 function saveSettings() {
     const endpoint = document.getElementById('apiEndpoint').value.trim();
-    if (endpoint) {
-        CONFIG.apiEndpoint = endpoint;
-        localStorage.setItem('apiEndpoint', endpoint);
-        settingsModal.classList.remove('active');
-        checkHealth();
-    }
+    // Allow empty string to use relative URLs
+    CONFIG.apiEndpoint = endpoint;
+    localStorage.setItem('apiEndpoint', endpoint);
+    settingsModal.classList.remove('active');
+    checkHealth();
 }
 
 // Check API health
 async function checkHealth() {
     try {
-        const response = await fetch(`${CONFIG.apiEndpoint}/health`);
+        const baseUrl = CONFIG.apiEndpoint || window.location.origin;
+        const response = await fetch(`${baseUrl}/health`);
         if (response.ok) {
             const data = await response.json();
             console.log('API Health:', data);
         }
     } catch (error) {
         console.warn('API health check failed:', error);
+        const baseUrl = CONFIG.apiEndpoint || window.location.origin;
         addMessage('assistant', 
-            `⚠️ Warning: Could not connect to API at ${CONFIG.apiEndpoint}. ` +
+            `⚠️ Warning: Could not connect to API at ${baseUrl}. ` +
             `Please check your settings and ensure the backend is running.`,
             'error'
         );

@@ -117,7 +117,10 @@
                 <div class="modal-body">
                     <div class="setting-item">
                         <label>API Endpoint:</label>
-                        <input type="text" id="apiEndpoint" value="http://localhost:8000" />
+                        <input type="text" id="apiEndpoint" placeholder="Leave empty to use current domain" />
+                        <small style="display: block; color: #666; margin-top: 4px;">
+                            Leave empty to use current domain (recommended for production)
+                        </small>
                     </div>
                     <div class="setting-item">
                         <label>Session ID:</label>
